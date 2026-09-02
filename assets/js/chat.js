@@ -27,59 +27,74 @@ const text = document.getElementById("text");
 const send = document.getElementById("send");
 
 let user = null;
+let unsubscribe = null;
 
 // Cek login
 onAuthStateChanged(auth, (u) => {
-  if (!u) return location.href = "index.html";
+  if (!u) {
+    window.location.href = "index.html";
+    return;
+  }
 
   user = u;
-  username.textContent = u.displayName;
-  photo.src = u.photoURL;
 
+  username.textContent = user.displayName || "User";
+  photo.src = user.photoURL || "assets/img/default-avatar.png";
+
+  if (unsubscribe) unsubscribe();
   loadMessages();
 });
 
-// Ambil pesan realtime
+// Ambil semua pesan grup secara realtime
 function loadMessages() {
-  const q = query(collection(db, "messages"), orderBy("timestamp"));
+  const q = query(
+    collection(db, "messages"),
+    orderBy("timestamp", "asc")
+  );
 
-  onSnapshot(q, (snap) => {
+  unsubscribe = onSnapshot(q, (snapshot) => {
     messages.innerHTML = "";
 
-    snap.forEach((doc) => {
+    snapshot.forEach((doc) => {
       const m = doc.data();
-      const me = m.uid === user.uid;
+      const isMe = m.uid === user.uid;
 
-      messages.innerHTML += `
-        <div class="row ${me ? "me" : "other"}">
-          ${!me ? `<img class="avatar" src="${m.photoURL}">` : ""}
-          <div class="bubble">
-            ${!me ? `<div class="sender">${m.name}</div>` : ""}
-            ${m.text}
-          </div>
-        </div>`;
+      const div = document.createElement("div");
+      div.className = `row ${isMe ? "me" : "other"}`;
+
+      div.innerHTML = `
+        ${!isMe ? `<img class="avatar" src="${m.photoURL || "assets/img/default-avatar.png"}">` : ""}
+        <div class="bubble">
+          ${!isMe ? `<div class="sender">${m.name}</div>` : ""}
+          <div>${m.text}</div>
+        </div>
+      `;
+
+      messages.appendChild(div);
     });
 
     messages.scrollTop = messages.scrollHeight;
   });
 }
 
-// Kirim pesan
+// Kirim pesan ke koleksi messages
 async function sendMessage() {
-  if (text.value.trim() === "") return;
+  const isi = text.value.trim();
+  if (!isi || !user) return;
 
   await addDoc(collection(db, "messages"), {
     uid: user.uid,
     name: user.displayName,
     photoURL: user.photoURL,
-    text: text.value,
+    text: isi,
     timestamp: serverTimestamp()
   });
 
   text.value = "";
 }
 
-send.onclick = sendMessage;
-text.addEventListener("keypress", (e) => {
+send.addEventListener("click", sendMessage);
+
+text.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
