@@ -25,32 +25,39 @@ const text = document.getElementById("text");
 const send = document.getElementById("send");
 
 let user = null;
+let unsubscribe = null;
 
+// Cek login
 onAuthStateChanged(auth, (u) => {
-  if (!u) return location.href = "index.html";
+  if (!u) {
+    window.location.href = "index.html";
+    return;
+  }
 
   user = u;
-  username.textContent = u.displayName;
-  photo.src = u.photoURL;
+  username.textContent = u.displayName || "User";
+  photo.src = u.photoURL || "assets/img/default-avatar.png";
 
+  if (unsubscribe) unsubscribe();
   loadMessages();
 });
 
+// Ambil pesan realtime
 function loadMessages() {
-  const q = query(collection(db, "messages"), orderBy("timestamp"));
+  const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
 
-  onSnapshot(q, (snap) => {
+  unsubscribe = onSnapshot(q, (snapshot) => {
     messages.innerHTML = "";
 
-    snap.forEach((d) => {
-      const m = d.data();
+    snapshot.forEach((doc) => {
+      const m = doc.data();
       const me = m.uid === user.uid;
 
       messages.innerHTML += `
         <div class="row ${me ? "me" : "other"}">
-          ${!me ? `<img class="avatar" src="${m.photoURL}">` : ""}
+          ${!me ? `<img class="avatar" src="${m.photoURL || "assets/img/default-avatar.png"}">` : ""}
           <div class="bubble">
-            ${!me ? `<div class="sender">${m.name}</div>` : ""}
+            ${!me ? `<div class="sender">${m.name || "User"}</div>` : ""}
             <div>${m.text}</div>
           </div>
         </div>`;
@@ -60,22 +67,29 @@ function loadMessages() {
   });
 }
 
+// Kirim pesan
 async function sendMessage() {
   const isi = text.value.trim();
-  if (!isi) return;
+  if (!isi || !user) return;
 
-  await addDoc(collection(db, "messages"), {
-    uid: user.uid,
-    name: user.displayName,
-    photoURL: user.photoURL,
-    text: isi,
-    timestamp: Timestamp.now()
-  });
+  try {
+    await addDoc(collection(db, "messages"), {
+      uid: user.uid,
+      name: user.displayName,
+      photoURL: user.photoURL,
+      text: isi,
+      timestamp: Timestamp.now()
+    });
 
-  text.value = "";
+    text.value = "";
+  } catch (err) {
+    alert("Gagal mengirim: " + err.message);
+    console.error(err);
+  }
 }
 
-send.onclick = sendMessage;
+send.addEventListener("click", sendMessage);
+
 text.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
