@@ -1,17 +1,48 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import { auth, db } from "./firebase.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAJ0S---xqH5UjUFyePuvHZRp8My5pXifA",
-  authDomain: "chat-c639a.firebaseapp.com",
-  projectId: "chat-c639a",
-  storageBucket: "chat-c639a.firebasestorage.app",
-  messagingSenderId: "1012375212670",
-  appId: "1:1012375212670:web:7aca174953055b1c62be2f"
-};
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
-const app = initializeApp(firebaseConfig);
+import {
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  prompt: "select_account"
+});
+
+export async function loginGoogle() {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      name: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      lastLogin: serverTimestamp()
+    }, { merge: true });
+
+    window.location.href = "chat.html";
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+}
+
+export async function logout() {
+  await signOut(auth);
+  window.location.href = "index.html";
+}
+
+export function checkLogin(callback) {
+  onAuthStateChanged(auth, callback);
+}
