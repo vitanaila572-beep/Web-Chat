@@ -1,12 +1,10 @@
-import { app } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
-  getAuth,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 import {
-  getFirestore,
   collection,
   addDoc,
   query,
@@ -15,9 +13,6 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-
 const username = document.getElementById("username");
 const photo = document.getElementById("photo");
 const messages = document.getElementById("messages");
@@ -25,31 +20,29 @@ const text = document.getElementById("text");
 const send = document.getElementById("send");
 
 let user = null;
-let unsubscribe = null;
+let unsub = null;
 
-// Cek login
 onAuthStateChanged(auth, (u) => {
   if (!u) {
-    window.location.href = "index.html";
+    location.href = "index.html";
     return;
   }
 
   user = u;
-  username.textContent = u.displayName || "User";
+  username.textContent = u.displayName;
   photo.src = u.photoURL || "assets/img/default-avatar.png";
 
-  if (unsubscribe) unsubscribe();
+  if (unsub) unsub();
   loadMessages();
 });
 
-// Ambil pesan realtime
 function loadMessages() {
   const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
 
-  unsubscribe = onSnapshot(q, (snapshot) => {
+  unsub = onSnapshot(q, (snap) => {
     messages.innerHTML = "";
 
-    snapshot.forEach((doc) => {
+    snap.forEach((doc) => {
       const m = doc.data();
       const me = m.uid === user.uid;
 
@@ -57,7 +50,7 @@ function loadMessages() {
         <div class="row ${me ? "me" : "other"}">
           ${!me ? `<img class="avatar" src="${m.photoURL || "assets/img/default-avatar.png"}">` : ""}
           <div class="bubble">
-            ${!me ? `<div class="sender">${m.name || "User"}</div>` : ""}
+            ${!me ? `<div class="sender">${m.name}</div>` : ""}
             <div>${m.text}</div>
           </div>
         </div>`;
@@ -67,7 +60,6 @@ function loadMessages() {
   });
 }
 
-// Kirim pesan
 async function sendMessage() {
   const isi = text.value.trim();
   if (!isi || !user) return;
@@ -76,15 +68,15 @@ async function sendMessage() {
     await addDoc(collection(db, "messages"), {
       uid: user.uid,
       name: user.displayName,
-      photoURL: user.photoURL,
+      photoURL: user.photoURL || "",
       text: isi,
       timestamp: Timestamp.now()
     });
 
     text.value = "";
-  } catch (err) {
-    alert("Gagal mengirim: " + err.message);
-    console.error(err);
+  } catch (e) {
+    console.error(e);
+    alert("Gagal mengirim pesan");
   }
 }
 
