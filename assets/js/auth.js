@@ -1,8 +1,10 @@
+
 import { auth, db } from "./firebase.js";
 
 import {
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -20,11 +22,14 @@ provider.setCustomParameters({
 
 // LOGIN
 export async function loginGoogle() {
-  try {
-    // Putuskan sesi Firebase dulu agar popup selalu menampilkan pilihan akun
-    await signOut(auth).catch(() => {});
+  await signInWithRedirect(auth, provider);
+}
 
-    const result = await signInWithPopup(auth, provider);
+// HASIL LOGIN
+getRedirectResult(auth)
+  .then(async (result) => {
+    if (!result) return;
+
     const user = result.user;
 
     await setDoc(
@@ -40,11 +45,11 @@ export async function loginGoogle() {
     );
 
     window.location.href = "chat.html";
-  } catch (err) {
+  })
+  .catch((err) => {
     console.error(err);
     alert("Login gagal: " + err.message);
-  }
-}
+  });
 
 // LOGOUT
 export async function logout() {
