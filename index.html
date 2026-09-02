@@ -119,11 +119,11 @@ loginBtn.onclick = async () => {
 };
 </script>
 
-  <script type="module">
-  import { loginGoogle } from "./assets/js/auth.js";
+<script type="module">
+import { loginGoogle } from "./assets/js/auth.js";
 
-  document.getElementById("loginBtn").onclick = loginGoogle;
-  </script>
+document.getElementById("loginBtn").addEventListener("click", loginGoogle);
+</script>
 
 </body>
 </html>
