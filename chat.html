@@ -7,197 +7,50 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial,sans-serif}
-body{
-  background:linear-gradient(160deg,#07111f,#111827,#1e3a8a);
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-.app{
-  width:100%;
-  max-width:430px;
-  height:100vh;
-  background:rgba(15,23,42,.72);
-  backdrop-filter:blur(25px);
-  display:flex;
-  flex-direction:column;
-}
-.top{
-  padding:14px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.avatar{
-  width:48px;height:48px;border-radius:50%;
-  background:url('assets/img/default-avatar.png') center/cover;
-  position:relative;
-}
-.online{
-  width:12px;height:12px;background:#22c55e;
-  border:2px solid #111827;border-radius:50%;
-  position:absolute;right:1px;bottom:1px;
-}
+body{background:linear-gradient(160deg,#07111f,#111827,#1e3a8a);height:100vh}
+.app{max-width:430px;height:100vh;margin:auto;background:#0f172a;display:flex;flex-direction:column}
+.top{padding:14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1f2937}
+#photo{width:48px;height:48px;border-radius:50%;object-fit:cover}
 .info h2{color:#fff;font-size:17px}
 .info p{color:#94a3b8;font-size:12px}
-.menu{margin-left:auto;color:#fff;font-size:22px}
-.chat{
-  flex:1;
-  overflow:auto;
-  padding:16px;
-}
-.date{
-  width:max-content;
-  margin:0 auto 18px;
-  padding:6px 14px;
-  border-radius:999px;
-  background:rgba(255,255,255,.08);
-  color:#cbd5e1;
-  font-size:12px;
-}
+.chat{flex:1;overflow:auto;padding:16px}
+.date{margin:auto auto 18px;width:max-content;padding:6px 14px;border-radius:999px;background:#1f2937;color:#cbd5e1;font-size:12px}
 .row{display:flex;gap:8px;margin-bottom:14px}
 .row.me{justify-content:flex-end}
-.pic{
-  width:34px;height:34px;border-radius:50%;
-  background:#64748b;
-  flex-shrink:0;
-}
-.bubble{
-  max-width:74%;
-  padding:10px 14px;
-  border-radius:18px;
-  color:#fff;
-  line-height:1.45;
-}
-.other .bubble{
-  background:#1f2937;
-  border-bottom-left-radius:6px;
-}
-.me .bubble{
-  background:linear-gradient(135deg,#2563eb,#3b82f6);
-  border-bottom-right-radius:6px;
-}
-.name{
-  color:#93c5fd;
-  font-size:11px;
-  margin-bottom:4px;
-  font-weight:600;
-}
-.time{
-  font-size:10px;
-  color:#cbd5e1;
-  margin-top:6px;
-  text-align:right;
-}
-.bottom{
-  padding:12px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  border-top:1px solid rgba(255,255,255,.08);
-}
-.icon{
-  color:#cbd5e1;
-  font-size:20px;
-}
-.input{
-  flex:1;
-  background:#1f2937;
-  border-radius:24px;
-  display:flex;
-  align-items:center;
-  padding:0 14px;
-}
-.input input{
-  flex:1;
-  background:transparent;
-  border:none;
-  color:#fff;
-  padding:14px 8px;
-  outline:none;
-}
-.send{
-  width:46px;height:46px;
-  border:none;border-radius:50%;
-  background:#2563eb;color:#fff;
-  font-size:18px;
-}
+.avatar{width:34px;height:34px;border-radius:50%}
+.bubble{max-width:74%;padding:10px 14px;border-radius:18px;color:#fff}
+.other .bubble{background:#1f2937}
+.me .bubble{background:#2563eb}
+.sender{color:#93c5fd;font-size:11px;margin-bottom:4px}
+.bottom{padding:12px;display:flex;gap:10px;border-top:1px solid #1f2937}
+.input{flex:1;background:#1f2937;border-radius:24px;padding:0 14px}
+#text{width:100%;background:transparent;border:none;color:#fff;padding:14px 0;outline:none}
+#send{width:46px;border:none;border-radius:50%;background:#2563eb;color:#fff;font-size:18px}
 </style>
 </head>
 <body>
 
 <div class="app">
-
   <div class="top">
-    <div class="avatar"><div class="online"></div></div>
+    <img id="photo" src="assets/img/default-avatar.png">
     <div class="info">
-      <h2>NexChat Community</h2>
-      <p>128 anggota • 43 online</p>
+      <h2 id="username">Memuat...</h2>
+      <p>Realtime Community Chat</p>
     </div>
-    <div class="menu">⋮</div>
   </div>
 
-  <div class="chat" id="chat">
-
+  <div class="chat" id="messages">
     <div class="date">Hari Ini</div>
-
-    <div class="row other">
-      <div class="pic"></div>
-      <div class="bubble">
-        <div class="name">Vita</div>
-        Halo semuanya! Siapa yang online? 👋
-        <div class="time">21:14</div>
-      </div>
-    </div>
-
-    <div class="row me">
-      <div class="bubble">
-        Lagi ngerjain NexChat nih 😎
-        <div class="time">21:15</div>
-      </div>
-    </div>
-
   </div>
 
   <div class="bottom">
-    <div class="icon">😊</div>
-    <div class="icon">＋</div>
-
     <div class="input">
       <input id="text" placeholder="Tulis pesan...">
-      <div class="icon">🎤</div>
     </div>
-
-    <button class="send" onclick="send()">➤</button>
+    <button id="send">➤</button>
   </div>
-
 </div>
 
-<script>
-const chat=document.getElementById("chat");
-const text=document.getElementById("text");
-
-function send(){
- if(text.value.trim()=="") return;
-
- chat.innerHTML += `
- <div class="row me">
-   <div class="bubble">
-     ${text.value}
-     <div class="time">Sekarang</div>
-   </div>
- </div>`;
-
- text.value="";
- chat.scrollTop=chat.scrollHeight;
-}
-
-text.addEventListener("keypress",e=>{
- if(e.key==="Enter") send();
-});
-</script>
-
+<script type="module" src="./assets/js/chat.js"></script>
 </body>
 </html>
