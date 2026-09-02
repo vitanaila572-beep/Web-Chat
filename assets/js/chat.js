@@ -1,5 +1,3 @@
-// assets/js/chat.js
-
 import { app } from "./firebase.js";
 
 import {
@@ -14,7 +12,7 @@ import {
   query,
   orderBy,
   onSnapshot,
-  serverTimestamp
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 const auth = getAuth(app);
@@ -27,74 +25,57 @@ const text = document.getElementById("text");
 const send = document.getElementById("send");
 
 let user = null;
-let unsubscribe = null;
 
-// Cek login
 onAuthStateChanged(auth, (u) => {
-  if (!u) {
-    window.location.href = "index.html";
-    return;
-  }
+  if (!u) return location.href = "index.html";
 
   user = u;
+  username.textContent = u.displayName;
+  photo.src = u.photoURL;
 
-  username.textContent = user.displayName || "User";
-  photo.src = user.photoURL || "assets/img/default-avatar.png";
-
-  if (unsubscribe) unsubscribe();
   loadMessages();
 });
 
-// Ambil semua pesan grup secara realtime
 function loadMessages() {
-  const q = query(
-    collection(db, "messages"),
-    orderBy("timestamp", "asc")
-  );
+  const q = query(collection(db, "messages"), orderBy("timestamp"));
 
-  unsubscribe = onSnapshot(q, (snapshot) => {
+  onSnapshot(q, (snap) => {
     messages.innerHTML = "";
 
-    snapshot.forEach((doc) => {
-      const m = doc.data();
-      const isMe = m.uid === user.uid;
+    snap.forEach((d) => {
+      const m = d.data();
+      const me = m.uid === user.uid;
 
-      const div = document.createElement("div");
-      div.className = `row ${isMe ? "me" : "other"}`;
-
-      div.innerHTML = `
-        ${!isMe ? `<img class="avatar" src="${m.photoURL || "assets/img/default-avatar.png"}">` : ""}
-        <div class="bubble">
-          ${!isMe ? `<div class="sender">${m.name}</div>` : ""}
-          <div>${m.text}</div>
-        </div>
-      `;
-
-      messages.appendChild(div);
+      messages.innerHTML += `
+        <div class="row ${me ? "me" : "other"}">
+          ${!me ? `<img class="avatar" src="${m.photoURL}">` : ""}
+          <div class="bubble">
+            ${!me ? `<div class="sender">${m.name}</div>` : ""}
+            <div>${m.text}</div>
+          </div>
+        </div>`;
     });
 
     messages.scrollTop = messages.scrollHeight;
   });
 }
 
-// Kirim pesan ke koleksi messages
 async function sendMessage() {
   const isi = text.value.trim();
-  if (!isi || !user) return;
+  if (!isi) return;
 
   await addDoc(collection(db, "messages"), {
     uid: user.uid,
     name: user.displayName,
     photoURL: user.photoURL,
     text: isi,
-    timestamp: serverTimestamp()
+    timestamp: Timestamp.now()
   });
 
   text.value = "";
 }
 
-send.addEventListener("click", sendMessage);
-
+send.onclick = sendMessage;
 text.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
