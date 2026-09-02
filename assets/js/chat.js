@@ -15,17 +15,16 @@ import {
 
 const username = document.getElementById("username");
 const photo = document.getElementById("photo");
-const messages = document.getElementById("messages");
+const chat = document.getElementById("chat"); // SESUAI HTML
 const text = document.getElementById("text");
 const send = document.getElementById("send");
 
 let user = null;
 let unsub = null;
 
-// Cek login
 onAuthStateChanged(auth, (u) => {
   if (!u) {
-    location.href = "index.html";
+    window.location.href = "index.html";
     return;
   }
 
@@ -37,18 +36,17 @@ onAuthStateChanged(auth, (u) => {
   loadMessages();
 });
 
-// Ambil pesan realtime
 function loadMessages() {
   const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
 
   unsub = onSnapshot(q, (snapshot) => {
-    messages.innerHTML = `<div class="date">Hari Ini</div>`;
+    chat.innerHTML = `<div class="date">Hari Ini</div>`;
 
     snapshot.forEach((doc) => {
       const m = doc.data();
       const me = m.uid === user.uid;
 
-      messages.innerHTML += `
+      chat.innerHTML += `
         <div class="row ${me ? "me" : "other"}">
           ${
             !me
@@ -56,45 +54,33 @@ function loadMessages() {
               : ""
           }
           <div class="bubble">
-            ${!me ? `<div class="sender">${m.name}</div>` : ""}
-            <div>${m.text}</div>
+            ${!me ? `<div class="name">${m.name}</div>` : ""}
+            ${m.text}
           </div>
         </div>
       `;
     });
 
-    messages.scrollTop = messages.scrollHeight;
+    chat.scrollTop = chat.scrollHeight;
   });
 }
 
-// Kirim pesan
 async function sendMessage() {
   const isi = text.value.trim();
   if (!isi || !user) return;
 
-  const pesan = isi;
-  text.value = ""; // langsung kosong
+  text.value = "";
 
-  try {
-    await addDoc(collection(db, "messages"), {
-      uid: user.uid,
-      name: user.displayName,
-      photoURL: user.photoURL || "",
-      text: pesan,
-      timestamp: Timestamp.now()
-    });
-  } catch (e) {
-    console.error(e);
-    alert("Gagal mengirim pesan");
-    text.value = pesan;
-  }
+  await addDoc(collection(db, "messages"), {
+    uid: user.uid,
+    name: user.displayName,
+    photoURL: user.photoURL || "",
+    text: isi,
+    timestamp: Timestamp.now()
+  });
 }
 
 send.addEventListener("click", sendMessage);
-
 text.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === "Enter") sendMessage();
 });
