@@ -14,40 +14,28 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
 
-// SELALU TAMPILKAN PILIH AKUN
-provider.setCustomParameters({
-  prompt: "select_account"
-});
-
-// LOGIN
 export async function loginGoogle() {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
 
-    await setDoc(doc(db, "users", user.uid), {
-      name: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL,
-      lastLogin: serverTimestamp()
-    }, { merge: true });
+  await setDoc(doc(db, "users", user.uid), {
+    uid: user.uid,
+    name: user.displayName,
+    email: user.email,
+    photoURL: user.photoURL,
+    lastLogin: serverTimestamp()
+  }, { merge: true });
 
-    window.location.href = "chat.html";
-
-  } catch (err) {
-    console.error(err);
-    alert("Login gagal: " + err.message);
-  }
+  window.location.href = "chat.html";
 }
 
-// LOGOUT
 export async function logout() {
   await signOut(auth);
   window.location.href = "index.html";
 }
 
-// CEK LOGIN
 export function checkLogin(callback) {
   onAuthStateChanged(auth, callback);
 }
