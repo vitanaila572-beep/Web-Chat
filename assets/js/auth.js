@@ -18,9 +18,12 @@ provider.setCustomParameters({
   prompt: "select_account"
 });
 
-// LOGIN GOOGLE
+// LOGIN
 export async function loginGoogle() {
   try {
+    // Putuskan sesi Firebase dulu agar popup selalu menampilkan pilihan akun
+    await signOut(auth).catch(() => {});
+
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
@@ -36,24 +39,20 @@ export async function loginGoogle() {
       { merge: true }
     );
 
-    window.location.replace("chat.html");
-  } catch (error) {
-    console.error("LOGIN ERROR:", error);
-    alert(error.message);
+    window.location.href = "chat.html";
+  } catch (err) {
+    console.error(err);
+    alert("Login gagal: " + err.message);
   }
 }
 
 // LOGOUT
 export async function logout() {
-  try {
-    await signOut(auth);
-    window.location.replace("index.html");
-  } catch (error) {
-    console.error(error);
-  }
+  await signOut(auth);
+  window.location.href = "index.html";
 }
 
-// CEK STATUS LOGIN
+// CEK LOGIN
 export function checkLogin(callback) {
   return onAuthStateChanged(auth, callback);
 }
