@@ -22,6 +22,7 @@ const send = document.getElementById("send");
 let user = null;
 let unsub = null;
 
+// Cek login
 onAuthStateChanged(auth, (u) => {
   if (!u) {
     location.href = "index.html";
@@ -36,52 +37,64 @@ onAuthStateChanged(auth, (u) => {
   loadMessages();
 });
 
+// Ambil pesan realtime
 function loadMessages() {
   const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
 
-  unsub = onSnapshot(q, (snap) => {
-    messages.innerHTML = "";
+  unsub = onSnapshot(q, (snapshot) => {
+    messages.innerHTML = `<div class="date">Hari Ini</div>`;
 
-    snap.forEach((doc) => {
+    snapshot.forEach((doc) => {
       const m = doc.data();
       const me = m.uid === user.uid;
 
       messages.innerHTML += `
         <div class="row ${me ? "me" : "other"}">
-          ${!me ? `<img class="avatar" src="${m.photoURL || "assets/img/default-avatar.png"}">` : ""}
+          ${
+            !me
+              ? `<img class="avatar" src="${m.photoURL || "assets/img/default-avatar.png"}">`
+              : ""
+          }
           <div class="bubble">
             ${!me ? `<div class="sender">${m.name}</div>` : ""}
             <div>${m.text}</div>
           </div>
-        </div>`;
+        </div>
+      `;
     });
 
     messages.scrollTop = messages.scrollHeight;
   });
 }
 
+// Kirim pesan
 async function sendMessage() {
   const isi = text.value.trim();
   if (!isi || !user) return;
+
+  const pesan = isi;
+  text.value = ""; // langsung kosong
 
   try {
     await addDoc(collection(db, "messages"), {
       uid: user.uid,
       name: user.displayName,
       photoURL: user.photoURL || "",
-      text: isi,
+      text: pesan,
       timestamp: Timestamp.now()
     });
-
-    text.value = "";
   } catch (e) {
     console.error(e);
     alert("Gagal mengirim pesan");
+    text.value = pesan;
   }
 }
 
 send.addEventListener("click", sendMessage);
 
 text.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendMessage();
+  }
 });
