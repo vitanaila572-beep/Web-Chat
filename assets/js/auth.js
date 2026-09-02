@@ -14,28 +14,46 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: "select_account" });
+provider.setCustomParameters({
+  prompt: "select_account"
+});
 
+// LOGIN GOOGLE
 export async function loginGoogle() {
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-  await setDoc(doc(db, "users", user.uid), {
-    uid: user.uid,
-    name: user.displayName,
-    email: user.email,
-    photoURL: user.photoURL,
-    lastLogin: serverTimestamp()
-  }, { merge: true });
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        lastLogin: serverTimestamp()
+      },
+      { merge: true }
+    );
 
-  window.location.href = "chat.html";
+    window.location.replace("chat.html");
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
+    alert(error.message);
+  }
 }
 
+// LOGOUT
 export async function logout() {
-  await signOut(auth);
-  window.location.href = "index.html";
+  try {
+    await signOut(auth);
+    window.location.replace("index.html");
+  } catch (error) {
+    console.error(error);
+  }
 }
 
+// CEK STATUS LOGIN
 export function checkLogin(callback) {
-  onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, callback);
 }
