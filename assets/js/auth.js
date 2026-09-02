@@ -1,29 +1,26 @@
-// assets/js/auth.js
-
-import { app } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
-  getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
+  signInWithRedirect,
+  getRedirectResult
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 import {
-  getFirestore,
   doc,
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-const auth = getAuth(app);
-const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// LOGIN
 export async function loginGoogle() {
-  const result = await signInWithPopup(auth, provider);
+  await signInWithRedirect(auth, provider);
+}
+
+getRedirectResult(auth).then(async (result) => {
+  if (!result?.user) return;
+
   const user = result.user;
 
   await setDoc(doc(db, "users", user.uid), {
@@ -34,16 +31,4 @@ export async function loginGoogle() {
   }, { merge: true });
 
   location.href = "chat.html";
-}
-
-// LOGOUT
-export function logout() {
-  signOut(auth).then(() => {
-    location.href = "index.html";
-  });
-}
-
-// CEK STATUS LOGIN
-export function checkLogin(callback) {
-  onAuthStateChanged(auth, callback);
-}
+});
